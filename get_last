@@ -3,19 +3,20 @@
 import sys
 
 def mytail(filename, length):
-    BUFSIZE = 10000
+    BUFSIZE = 100
     with open(filename, 'r') as f:
         # get the length of the file
         f.seek(0,2)
         file_length = f.tell()
+        f.seek(0)
 
         # how many blocks are in the file?
         blocks = (file_length + BUFSIZE - 1) / BUFSIZE
 
         # find which block contains the start of the desired output data
         lines = 0
-        for block in range(blocks, 0, -1):
-            f.seek(block * BUFSIZE)
+        for block in xrange(blocks):
+            f.seek((blocks-block-1) * BUFSIZE)
 
             data = f.read(BUFSIZE)
             block_lines = data.count('\n')
@@ -34,10 +35,10 @@ def mytail(filename, length):
                 break
 
         # found the position of the start, print the rest of this block
-        sys.stdout.write(data[pos + 1:])
+        yield data[pos + 1:]
 
         # print the rest of the file
-        sys.stdout.write(f.read())
+        yield f.read()
 
 
 if __name__ == '__main__':
@@ -55,4 +56,5 @@ if __name__ == '__main__':
 
     args = parser.parse_args()
 
-    mytail(args.filename, args.lines)
+    for x in mytail(args.filename, args.lines):
+        sys.stdout.write(x)
